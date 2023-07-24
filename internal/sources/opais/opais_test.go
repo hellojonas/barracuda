@@ -2,6 +2,8 @@ package opais
 
 import (
 	"testing"
+
+	"github.com/hellojonas/barracuda/pkg/news"
 )
 
 func TestFindNews(t *testing.T) {
@@ -18,8 +20,7 @@ func TestFindNews(t *testing.T) {
 	}
 
 	for _, a := range articles {
-		emptyArticle := a.Title == "" && a.Description == "" && a.Link == "" && a.Date == "" 
-		if emptyArticle {
+		if news.IsEmpty(a) {
 			t.Fatalf("empty article found")
 		}
 	}

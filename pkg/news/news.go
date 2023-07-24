@@ -11,3 +11,7 @@ type Article struct {
 type  NewsPage interface {
 	FindNews () ([]Article, error)
 }
+
+func IsEmpty(a Article) bool {
+	return a.Title == "" && a.Link == ""
+}

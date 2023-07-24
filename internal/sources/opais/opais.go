@@ -2,9 +2,10 @@ package opais
 
 import (
 	"fmt"
+	"net/http"
 	"strings"
 
-	"github.com/gocolly/colly"
+	"github.com/PuerkitoBio/goquery"
 	"github.com/hellojonas/barracuda/pkg/news"
 )
 
@@ -14,50 +15,46 @@ func NewPage() news.NewsPage {
 	return opais{}
 }
 
+
 func (o opais) FindNews() ([]news.Article, error) {
+	domain := "https://opais.co.mz"
+	postSelector := ".elementor-widget-container > .elementor-posts-container.elementor-posts.ecs-posts .elementor-post .elementor-section-wrap > .elementor-section .elementor-row"
+	descSelector := ".elementor-column:last-child .elementor-element > .elementor-widget-container > p:first-child"
+	titleSelector := ".elementor-column:last-child .elementor-heading-title a"
+	imageSelector := ".elementor-column:first-child .elementor-image a img"
+	dateSelector := ".elementor-column:last-child .elementor-element > .elementor-widget-container > ul.elementor-post-info.elementor-inline-items > li.elementor-inline-item:nth-child(2)"
 
-	c := colly.NewCollector(
-		colly.UserAgent("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36"),
-	)
-
-	articles := make([]news.Article, 0)
-
-	c.OnHTML(".elementor-widget-container > .elementor-posts", func(e *colly.HTMLElement) {
-		fmt.Println("-----> Hit")
-		articles = getArticles(e)
-	})
-
-	var err error
-	c.OnError(func(r *colly.Response, e error) {
-		err = e
-	})
+	res, err := http.Get(domain)
 
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to load page. %v", err)
+	}
+	defer res.Body.Close()
+
+	if res.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("page responded with non OK status")
 	}
 
-	c.Visit("https://opais.co.mz")
+	doc, err := goquery.NewDocumentFromReader(res.Body)
 
-	return articles, nil
-}
+	if err != nil {
+		return nil, fmt.Errorf("error loading page document. %v", err)
+	}
 
-func getArticles(h *colly.HTMLElement) []news.Article {
 	var articles []news.Article
-
-	h.ForEach(".elementor-post .elementor-row", func(i int, h *colly.HTMLElement) {
+	doc.Find(postSelector).Each(func(_ int, s *goquery.Selection) {
 		article := news.Article{}
-		h.ForEach(".elementor-column:last-child .elementor-heading-title a", func(_ int, h *colly.HTMLElement) {
-			article.Title = h.Text
-			article.Link = h.Attr("href")
-		})
-		h.ForEach(".elementor-column:last-child .elementor-element > .elementor-widget-container > p:first-child", func(_ int, h *colly.HTMLElement) {
-			article.Description = h.Text
-		})
-		h.ForEach(".elementor-column:last-child .elementor-element > .elementor-widget-container > ul > li:nth-child(2)", func(_ int, h *colly.HTMLElement) {
-			article.Date = strings.TrimSpace(h.Text)
-		})
-		articles = append(articles, article)
+		titleSelection := s.Find(titleSelector)
+		article.Title = titleSelection.Text()
+		article.Link = titleSelection.AttrOr("href", "")
+		article.Description = s.Find(descSelector).Text()
+		article.Image = s.Find(imageSelector).First().AttrOr("data-src", "")
+		article.Date = strings.TrimSpace(s.Find(dateSelector).First().Text())
+
+		if !news.IsEmpty(article) {
+			articles = append(articles, article)
+		}
 	})
 
-	return articles
+	return articles, nil
 }
