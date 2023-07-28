@@ -1,33 +1,48 @@
 package barracuda
 
 import (
+	"errors"
+	"fmt"
+
 	"github.com/hellojonas/barracuda/internal/sources/opais"
 	"github.com/hellojonas/barracuda/pkg/news"
 )
 
 type barracuda struct {
-    sources []news.NewsPage
+    sources map[string]string
 }
 
 func NewBarracuda() *barracuda {
-    sources := []news.NewsPage{
-        opais.NewPage(),
-    }
     return &barracuda{
-        sources: sources,
+	sources: map[string]string{
+	    "opais": "O País",
+	},
     }
 }
 
-func (b * barracuda) getArticles() ([]news.Article, error) {
-    var articles []news.Article
+// func saveArticles(souce string, article []news.Article) error {
+// }
 
-    for _, s := range b.sources {
-	as, err := s.FindNews()
-	if err != nil {
-	    continue
-	}
-	articles = append(articles, as...)
+// func (b * barracuda) refreshArticles() error {
+//     // refresh saved articles
+// }
+
+func (b * barracuda) getArticles(source string) ([]news.Article, error) {
+    // find articles by sorouce
+    _, ok := b.sources[source]
+
+    if !ok {
+	return nil, fmt.Errorf("could not locate source %s", source)
     }
 
-    return articles, nil
+    switch source {
+    case "opais":
+	articles, err := opais.NewPage().FindNews()
+	if err != nil {
+	    return nil, err
+	}
+	return articles, nil
+    }
+
+    return nil, errors.New("could not load articles. source not found")
 }
