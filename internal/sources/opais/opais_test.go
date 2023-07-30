@@ -20,7 +20,7 @@ func TestFindNews(t *testing.T) {
 	}
 
 	for _, a := range articles {
-		if news.IsEmpty(a) {
+		if !news.ValidArticle(a) {
 			t.Fatalf("empty article found")
 		}
 	}

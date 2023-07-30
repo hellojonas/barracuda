@@ -51,7 +51,7 @@ func (o opais) FindNews() ([]news.Article, error) {
 		article.Image = s.Find(imageSelector).First().AttrOr("data-src", "")
 		article.Date = strings.TrimSpace(s.Find(dateSelector).First().Text())
 
-		if !news.IsEmpty(article) {
+		if news.ValidArticle(article) {
 			articles = append(articles, article)
 		}
 	})
