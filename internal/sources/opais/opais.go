@@ -1,11 +1,11 @@
 package opais
 
 import (
-	"fmt"
 	"net/http"
 	"strings"
 
 	"github.com/PuerkitoBio/goquery"
+	"github.com/hellojonas/barracuda/internal/berror"
 	"github.com/hellojonas/barracuda/pkg/news"
 )
 
@@ -27,18 +27,19 @@ func (o opais) FindNews() ([]news.Article, error) {
 	res, err := http.Get(domain)
 
 	if err != nil {
-		return nil, fmt.Errorf("failed to load page. %v", err)
+		return nil, berror.New(berror.ErrSourceNotReachable, "failed to load page")
 	}
+
 	defer res.Body.Close()
 
 	if res.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("page responded with non OK status")
+		return nil, berror.New(berror.ErrSourceStatusNotOK, "page responded with non OK status")
 	}
 
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 
 	if err != nil {
-		return nil, fmt.Errorf("error loading page document. %v", err)
+		return nil, berror.New(berror.ErrSourceParseError, "error loading page document. %v")
 	}
 
 	var articles []news.Article
