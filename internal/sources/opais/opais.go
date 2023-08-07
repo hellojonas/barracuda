@@ -1,6 +1,7 @@
 package opais
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -14,7 +15,6 @@ type opais struct{}
 func NewPage() news.NewsPage {
 	return opais{}
 }
-
 
 func (o opais) FindNews() ([]news.Article, error) {
 	domain := "https://opais.co.mz"
@@ -39,7 +39,7 @@ func (o opais) FindNews() ([]news.Article, error) {
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 
 	if err != nil {
-		return nil, berror.New(berror.ErrSourceParseError, "error loading page document. %v")
+		return nil, berror.New(berror.ErrSourceParseFailed, fmt.Sprintf("error loading page document. %v", err))
 	}
 
 	var articles []news.Article
