@@ -1,19 +1,20 @@
 package main
 
 import (
-    "database/sql"
-    "errors"
-    "fmt"
-    "io/fs"
-    "log"
-    "net/http"
-    "os"
+	"database/sql"
+	"errors"
+	"fmt"
+	"io/fs"
+	"log"
+	"net/http"
+	"os"
 
-    "github.com/go-chi/chi/v5"
-    "github.com/go-chi/chi/v5/middleware"
-    "github.com/hellojonas/barracuda/internal/barracuda"
-    "github.com/hellojonas/barracuda/pkg/logs"
-    _ "github.com/lib/pq"
+	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
+	"github.com/hellojonas/barracuda/internal/barracuda"
+	"github.com/hellojonas/barracuda/pkg/logs"
+	_ "github.com/lib/pq"
+	"github.com/robfig/cron/v3"
 )
 
 func main() {
@@ -39,12 +40,27 @@ func main() {
     b.SetLogger(logger)
     bRouter := barracuda.Router(b)
 
-    go b.RefreshArticles()
+    c := cron.New()
+    _, err = c.AddFunc("0 4-23/6 * *", func() {
+	logger.Info("job to refresh articles has been started")
+	b.RefreshArticles()
+    })
+
+    if err != nil {
+	logger.Error("failed to register job to refresh articles. %v", err)
+	os.Exit(1)
+    }
+
+    c.Start()
 
     r.Mount("/api", bRouter)
 
-    fmt.Println("Application listenning on port :8080")
-    http.ListenAndServe(":8080", r)
+    logger.Info("Application started, listenning on port :8080")
+    err = http.ListenAndServe(":8080", r)
+
+    if err != nil {
+	logger.Error("application exit with error")
+    }
 }
 
 func newDB() (*sql.DB, error) {
