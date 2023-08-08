@@ -4,26 +4,37 @@ import (
 	"database/sql"
 	"log"
 	"testing"
+	"time"
 
 	"github.com/hellojonas/barracuda/pkg/news"
 )
 
 func _TestLoadArticles(t *testing.T) {
-    sourceSuccess := "opais"
-    sourceFail := "test"
-
-    b := New(nil)
-
-    _, err := b.getArticles(sourceFail)
-
-    if err == nil {
-	t.Fatal("should have failed on non exitent source")
-    }
-
-    articles, err := b.getArticles(sourceSuccess)
+    source := "opais"
+    category := "news"
+    date, err := time.Parse("2006-01-02", "2023-08-06")
 
     if err != nil {
-	t.Fatalf("failed loading articles %v\n", err)
+	t.Fatalf("invalid date. %v", err)
+    }
+
+    datasource := ""
+    db, err := sql.Open("postgres", datasource)
+
+    if err != nil {
+	log.Fatalf("error opening database connection. %v", err)
+    }
+
+    if err = db.Ping(); err != nil {
+	log.Fatalf("could not establish connection to database %v", err)
+    }
+
+    b := New(db)
+
+    articles, err := b.FindArticles(source, category, date)
+
+    if err != nil {
+	t.Fatalf("error finding articles. %v", err)
     }
 
     if len(articles) == 0 {
@@ -31,9 +42,9 @@ func _TestLoadArticles(t *testing.T) {
     }
 }
 
-func TestSaveArticles(t *testing.T) {
+func _TestSaveArticles(t *testing.T) {
     source := "opais"
-    datasource := "user=postgres password=LvQ7qm4smtsrSQ host=db.cvvinaictvfkqxzaxkkc.supabase.co port=5432 dbname=postgres"
+    datasource := ""
     db, err := sql.Open("postgres", datasource)
 
     if err != nil {
@@ -52,7 +63,7 @@ func TestSaveArticles(t *testing.T) {
 	    Link:        "https://link-to-page",
 	},
     }
-    if err = b.saveArticles(source, "news", articles); err != nil {
+    if _, err = b.saveArticles(source, "news", articles); err != nil {
 	t.Fatalf("should have saved 1 article, but saved none. %v", err)
     }
 }

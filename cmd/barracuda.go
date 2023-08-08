@@ -41,12 +41,13 @@ func main() {
     bRouter := barracuda.Router(b)
 
     c := cron.New()
-    _, err = c.AddFunc("0 4-23/6 * *", func() {
+    _, err = c.AddFunc("0 4-23/6 * * *", func() {
 	logger.Info("job to refresh articles has been started")
 	b.RefreshArticles()
     })
 
     if err != nil {
+	fmt.Println(err)
 	logger.Error("failed to register job to refresh articles. %v", err)
 	os.Exit(1)
     }

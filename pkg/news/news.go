@@ -1,12 +1,12 @@
 package news
 
 type Article struct {
-	Title       string
-	Description string
-	Date        string
-	Link        string
-	Image       string
-	Category    string
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Date        string `json:"date"`
+	Link        string `json:"link"`
+	Image       string `json:"image"`
+	Category    string `json:"category"`
 }
 
 type NewsPage interface {

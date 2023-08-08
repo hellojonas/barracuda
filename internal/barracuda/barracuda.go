@@ -69,7 +69,7 @@ func (b *barracuda) RefreshArticles() {
 			continue
 		}
 
-		b.logger.Info("%d articles persisted to %s", saved,  s.id)
+		b.logger.Info("%d articles persisted to %s", saved, s.id)
 	}
 }
 
@@ -162,25 +162,40 @@ func (b *barracuda) saveArticles(source string, category string, articles []news
 	return saved, tx.Commit()
 }
 
-func (b *barracuda) getArticles(source string) ([]news.Article, error) {
-	var src news.NewsPage
-	var sourceFound bool
-
-	for _, s := range b.sources {
-		if s.id == source {
-			src = s.page
-			sourceFound = true
-		}
-	}
-
-	if !sourceFound {
-		return nil, berror.New(berror.ErrSourceNotFound, fmt.Sprintf("source %s not found", source))
-	}
-
-	articles, err := src.FindNews()
+func (b *barracuda) FindArticles(source string, category string, dateStart time.Time) ([]news.Article, error) {
+	db := b.db
+	tx, err := db.Begin()
 
 	if err != nil {
-		return nil, err
+		return nil, berror.New(berror.ErrDBTxInintFailed, "error opening db transaction")
+	}
+
+	stmt, err := tx.Prepare(`SELECT title, description, link, image, date, category 
+		FROM articles WHERE source = $1 and category = $2 and created_at >= $3`)
+
+	if err != nil {
+		return nil, berror.New(berror.ErrDBInvalidQuery, "error opening db transaction")
+	}
+
+	rows, err := stmt.Query(source, category, dateStart)
+
+	if err != nil {
+		return nil, berror.New(berror.ErrDBQueryFailed, "error executing query")
+	}
+
+	var articles []news.Article
+	for rows.Next() {
+		var title, description, link, image, date, category string
+		rows.Scan(&title, &description, &link, &image, &date, &category)
+		article := news.Article{
+			Title: title,
+			Description: description,
+			Link: link,
+			Image: image,
+			Date: date,
+			Category: category,
+		}
+		articles = append(articles, article)
 	}
 
 	return articles, nil
