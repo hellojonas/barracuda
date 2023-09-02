@@ -19,6 +19,10 @@ func Router(b *barracuda) chi.Router {
 		source := chi.URLParam(r, "source")
 		encoder := json.NewEncoder(w)
 
+        if category == "" {
+            category = "news"
+        }
+
 		if date != "" {
 			d, err := time.Parse("2006-01-02", date)
 			if err != nil {
