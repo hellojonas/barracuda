@@ -8,7 +8,7 @@ import (
 )
 
 func TestSholdLogNLines(t *testing.T) {
-	buf  := bytes.NewBuffer(make([]byte, 0))
+	buf := bytes.NewBuffer(make([]byte, 0))
 
 	logger := New(buf)
 	defer logger.Close()

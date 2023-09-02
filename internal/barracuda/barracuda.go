@@ -188,12 +188,12 @@ func (b *barracuda) FindArticles(source string, category string, dateStart time.
 		var title, description, link, image, date, category string
 		rows.Scan(&title, &description, &link, &image, &date, &category)
 		article := news.Article{
-			Title: title,
+			Title:       title,
 			Description: description,
-			Link: link,
-			Image: image,
-			Date: date,
-			Category: category,
+			Link:        link,
+			Image:       image,
+			Date:        date,
+			Category:    category,
 		}
 		articles = append(articles, article)
 	}

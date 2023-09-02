@@ -18,7 +18,7 @@ func New(out io.Writer) *BLogger {
 		out:      out,
 		logger:   log.New(out, "", log.Ldate|log.Ltime),
 		template: "%10s: %s",
-		in: make(chan string),
+		in:       make(chan string),
 	}
 	go func() {
 		for msg := range b.in {
