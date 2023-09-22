@@ -20,7 +20,7 @@ jobs:
             SSH_KEY=$(mktemp)
             echo ${{ secrets.SSH_KEY_GITHUB }} >> $SSH_KEY
             chmod 600 $SSH_KEY
-            GIT_SSH_COMMAND='ssh -i $SSH_KEY -o UserKnownHostFiles=/dev/null StrictHostKeyChecking=no' git clone git@github.com:hellojonas/barracuda.git
+            GIT_SSH_COMMAND='ssh -i $SSH_KEY -o UserKnownHostsFiles=/dev/null StrictHostKeyChecking=no' git clone git@github.com:hellojonas/barracuda.git
             cd barracuda
             ./build.sh
             rm $SSH_KEY
