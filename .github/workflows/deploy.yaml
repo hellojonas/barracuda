@@ -1,0 +1,26 @@
+name: Deploy to production
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: 'main'
+      - shell: bash
+      - uses: appleboy/ssh-action@v1.0.0
+        with:
+          key: ${{ secrets.SSH_KEY_REMOTE }}
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          script: |
+            SSH_KEY=$(mktemp)
+            chmod 600 $SSH_KEY
+            GIT_SSH_COMMAND='ssh -i $SSH_KEY -o UserKnownHostFiles=/dev/null StrictHostKeyChecking=no' git clone git@github.com:hellojonas/barracuda.git
+            cd barracuda
+            ./build.sh
+            rm $SSH_KEY
