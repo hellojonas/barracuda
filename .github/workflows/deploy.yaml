@@ -12,15 +12,18 @@ jobs:
         with:
           ref: 'main'
       - uses: appleboy/ssh-action@v1.0.0
+        env:
+          SSH_KEY: ${{ secretes.SSH_KEY }}
         with:
           key: ${{ secrets.SSH_KEY_REMOTE }}
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
+          envs: SSH_KEY
           script: |
-            SSH_KEY=$(mktemp)
-            echo ${{ secrets.SSH_KEY_GITHUB }} >> $SSH_KEY
-            chmod 600 $SSH_KEY
-            GIT_SSH_COMMAND='ssh -i $SSH_KEY -o UserKnownHostsFiles=/dev/null StrictHostKeyChecking=no' git clone git@github.com:hellojonas/barracuda.git
+            IDENTITY_KEY=$(mktemp)
+            echo "$SSH_KEY" >> $IDENTITY_KEY
+            chmod 600 $IDENTITY_KEY
+            GIT_SSH_COMMAND='ssh -i $IDENTITY_KEY -o UserKnownHostsFiles=/dev/null StrictHostKeyChecking=no' git clone git@github.com:hellojonas/barracuda.git
             cd barracuda
             ./build.sh
-            rm $SSH_KEY
+            rm $IDENTITY_KEY
