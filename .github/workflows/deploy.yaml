@@ -13,7 +13,7 @@ jobs:
           ref: 'main'
       - uses: appleboy/ssh-action@v1.0.0
         env:
-          SSH_KEY: ${{ secrets.SSH_KEY }}
+          SSH_KEY: ${{ secrets.SSH_KEY_GITHUB }}
         with:
           key: ${{ secrets.SSH_KEY_REMOTE }}
           host: ${{ secrets.SSH_HOST }}
